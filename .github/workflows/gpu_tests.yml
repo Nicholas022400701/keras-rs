@@ -14,7 +14,7 @@ permissions:
 jobs:
   gpu_tests:
     name: GPU Tests (${{ matrix.backend }})
-    runs-on: linux-x86-g2-16-l4-1gpu
+    runs-on: linux-x86-g2-32-l4-1gpu
     timeout-minutes: ${{ inputs.timeout }}
 
     strategy:
