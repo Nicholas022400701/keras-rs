@@ -6,7 +6,7 @@ from keras_rs.src import types
 from keras_rs.src.api_export import keras_rs_export
 from keras_rs.src.utils import keras_utils
 
-SMALLEST_FLOAT = ml_dtypes.finfo("float32").smallest_normal / 100.0
+MIN_FLOAT = ml_dtypes.finfo("float32").min / 100.0
 
 
 @keras_rs_export("keras_rs.layers.RemoveAccidentalHits")
@@ -56,7 +56,7 @@ class RemoveAccidentalHits(keras.layers.Layer):
         # A more principled way is to implement
         # `softmax_cross_entropy_with_logits` with a input mask. Here we
         # approximate so by letting accidental hits have extremely small logits
-        # (SMALLEST_FLOAT) for ease-of-implementation.
+        # (MIN_FLOAT) for ease-of-implementation.
 
         labels_shape = ops.shape(labels)
         labels_rank = len(labels_shape)
@@ -86,12 +86,16 @@ class RemoveAccidentalHits(keras.layers.Layer):
             candidate_ids = ops.expand_dims(
                 candidate_ids, list(range(labels_rank - candidate_ids_rank))
             )
+        # Take the ID of the positive candidate along the last axis so that
+        # each row uses its own IDs when `candidate_ids` has leading dimensions.
         positive_indices = ops.expand_dims(ops.argmax(labels, axis=-1), -1)
-        positive_candidate_ids = ops.take(candidate_ids, positive_indices)
+        positive_candidate_ids = ops.take_along_axis(
+            candidate_ids, positive_indices, axis=-1
+        )
 
         duplicate = ops.cast(
             ops.equal(positive_candidate_ids, candidate_ids), labels.dtype
         )
         duplicate = ops.subtract(duplicate, labels)
 
-        return ops.add(logits, ops.multiply(duplicate, SMALLEST_FLOAT))
+        return ops.add(logits, ops.multiply(duplicate, MIN_FLOAT))
