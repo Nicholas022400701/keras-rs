@@ -58,7 +58,7 @@ def sort_by_scores(
     k: int | None = None,
     shuffle_ties: bool = True,
     seed: int | keras.random.SeedGenerator | None = None,
-) -> types.Tensor:
+) -> list[types.Tensor]:
     """
     Utility function for sorting tensors by scores.
 
